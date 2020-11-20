@@ -1,0 +1,79 @@
+/* This MPI program determines whether a circuit is satisfiable, whether there
+is a combination of inputs that causes the output of the circuit to be 1. The
+particular being testes is wired into the logic of check_circuit. All 
+combinations of inputs that satisfy the circuit are printed.
+ */
+
+#include "mpi.h"
+#include <stdio.h>
+#include <iostream>
+
+void check_circuit(int pid, int ii);
+
+int main(int argc, char **argv)
+{
+  int pid = 0, np = 0;
+
+  MPI_Init(&argc, &argv);
+  MPI_Comm_rank(MPI_COMM_WORLD, &pid); //determines which portion of the code it is responsable for
+  MPI_Comm_size(MPI_COMM_WORLD, &np); //determines the total number of processes in a communicator
+
+  int BVEC[16];
+  
+  for(int ii = pid; ii < 65536; ii += np){
+    EXTRACT_BIT(ii, 16, BVEC);
+    check_circuit(pid, ii, BVEC);
+  }
+
+  std::cout<< "Process " << pid << "is done." <<"\n";
+
+  MPI_Finalize(); //system frees up memory that was allocated to MPI
+  return 0;
+}
+
+void EXTRACT_BIT(int i4, int n, int bvec[])
+{
+  for(int ii = 0; ii < n; ++ii){
+    bvec[ii] = i4 % 2;
+    i4 /= 2; 
+  }
+}
+
+void check_circuit(int pid, int ii, int bvec[])
+{
+  int value;
+
+  value = 
+       (  bvec[0]  ||  bvec[1]  )
+    && ( !bvec[1]  || !bvec[3]  )
+    && (  bvec[2]  ||  bvec[3]  )
+    && ( !bvec[3]  || !bvec[4]  )
+    && (  bvec[4]  || !bvec[5]  )
+    && (  bvec[5]  || !bvec[6]  )
+    && (  bvec[5]  ||  bvec[6]  )
+    && (  bvec[6]  || !bvec[15] )
+    && (  bvec[7]  || !bvec[8]  )
+    && ( !bvec[7]  || !bvec[13] )
+    && (  bvec[8]  ||  bvec[9]  )
+    && (  bvec[8]  || !bvec[9]  )
+    && ( !bvec[9]  || !bvec[10] )
+    && (  bvec[9]  ||  bvec[11] )
+    && (  bvec[10] ||  bvec[11] )
+    && (  bvec[12] ||  bvec[13] )
+    && (  bvec[13] || !bvec[14] )
+    && (  bvec[14] ||  bvec[15] )
+    && (  bvec[14] ||  bvec[16] )
+    && (  bvec[17] ||  bvec[1]  )
+    && (  bvec[18] || !bvec[0]  )
+    && (  bvec[19] ||  bvec[1]  )
+    && (  bvec[19] || !bvec[18] )
+    && ( !bvec[19] || !bvec[9]  )
+    && (  bvec[0]  ||  bvec[17] )
+    && ( !bvec[1]  ||  bvec[20] )
+    && ( !bvec[21] ||  bvec[20] )
+    && ( !bvec[22] ||  bvec[20] )
+    && ( !bvec[21] || !bvec[20] )
+    && (  bvec[22] || !bvec[20] );
+
+  return value;
+}
